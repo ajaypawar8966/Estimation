@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Screen } from '../components/ui';
+import { Card, IconTile, Screen, SectionTitle } from '../components/ui';
+import { MATERIAL_TILES } from './MaterialCalculatorScreen';
 import { HomeStackParamList } from '../navigation/types';
 import { evaluate } from '../utils/evaluate';
 import { colors, radius } from '../theme';
@@ -74,7 +75,7 @@ export default function QuickCalculatorScreen({ navigation }: Props) {
   const live = result === null && expr !== '' ? evaluate(expr) : null;
 
   return (
-    <Screen title="Calculator" onBack={navigation.goBack} scroll={false}>
+    <Screen title="Calculator" onBack={navigation.goBack}>
       <View style={styles.display}>
         <Text style={styles.expr} numberOfLines={2} adjustsFontSizeToFit>
           {expr || '0'}
@@ -115,6 +116,25 @@ export default function QuickCalculatorScreen({ navigation }: Props) {
           </View>
         ))}
       </View>
+
+      <SectionTitle title="Quick Material Access" />
+      <View style={styles.grid}>
+        {MATERIAL_TILES.map(t => (
+          <Pressable
+            key={t.key}
+            accessibilityRole="button"
+            accessibilityLabel={`${t.title} calculator`}
+            onPress={() => navigation.navigate('Calculator', { id: t.key })}
+            style={({ pressed }) => [styles.gridItem, pressed && { opacity: 0.7 }]}>
+            <Card style={styles.material}>
+              <IconTile icon={t.icon} color="#fff" background={t.color} size={42} iconSize={20} />
+              <Text style={styles.materialText} numberOfLines={1}>
+                {t.title}
+              </Text>
+            </Card>
+          </Pressable>
+        ))}
+      </View>
     </Screen>
   );
 }
@@ -146,4 +166,9 @@ const styles = StyleSheet.create({
   keyTextOp: { color: colors.primary },
   keyTextEquals: { color: '#fff' },
   keyText: { fontSize: 24, fontWeight: '600', color: colors.text },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  // Three per row: (100% - two 12px gaps) / 3.
+  gridItem: { width: '31%', flexGrow: 1 },
+  material: { alignItems: 'center', gap: 10, paddingVertical: 16, paddingHorizontal: 8 },
+  materialText: { fontSize: 12, fontWeight: '700', color: colors.text },
 });

@@ -110,8 +110,7 @@ export default function RootNavigator() {
     return null;
   }
   // The app always opens on the dashboard. Sign in/up slide up over it when a
-  // signed-out user taps a feature (see requireAuth.ts). TODO(auth): that gate
-  // is switched off for now, so these screens aren't opened anywhere.
+  // signed-out user taps a feature (see requireAuth.ts).
   return (
     <NavigationContainer theme={theme}>
       <Root.Navigator screenOptions={stackOptions}>
