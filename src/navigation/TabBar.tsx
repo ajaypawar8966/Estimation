@@ -5,8 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, FileText, House, LucideIcon, User } from 'lucide-react-native';
 import { colors } from '../theme';
 import { useStore } from '../store/AppStore';
-// TODO(auth): re-enable with the sign-in gate below.
-// import { useRequireAuth } from './requireAuth';
+import { useRequireAuth } from './requireAuth';
 
 const TABS: Record<string, { label: string; icon: LucideIcon }> = {
   Home: { label: 'Home', icon: House },
@@ -23,7 +22,7 @@ const ROOT_SCREEN: Record<string, string> = {
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { unreadCount } = useStore();
-  // const requireAuth = useRequireAuth();
+  const requireAuth = useRequireAuth();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   // The tab names are dynamic here, so bypass the per-route navigate typings.
   const navigate = navigation.navigate as (name: string, params?: object) => void;
@@ -66,15 +65,12 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
             // Tapping the current tab pops back to its root screen.
             navigate(route.name, { screen: ROOT_SCREEN[route.name] });
           } else if (!focused) {
-            navigate(route.name);
-            // TODO(auth): sign-in is switched off for now. To turn it back on,
-            // replace the line above with:
-            // // Home is open to everyone; every other tab needs an account.
-            // if (route.name === 'Home') {
-            //   navigate(route.name);
-            // } else {
-            //   requireAuth(() => navigate(route.name));
-            // }
+            // Home is open to everyone; every other tab needs an account.
+            if (route.name === 'Home') {
+              navigate(route.name);
+            } else {
+              requireAuth(() => navigate(route.name));
+            }
           }
         };
 

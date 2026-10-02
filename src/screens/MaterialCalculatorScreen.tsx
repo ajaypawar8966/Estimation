@@ -31,8 +31,8 @@ type Tile = {
   background: string;
 };
 
-const TILES: Tile[] = [
-  { key: 'quick', title: 'Calculator', subtitle: 'Quick calculations', icon: Grid3x3, color: '#F97316', background: '#FFF3E8' },
+/** One tile per material calculator; also shown on the Quick Calculator screen. */
+export const MATERIAL_TILES: (Tile & { key: CalcId })[] = [
   { key: 'brick', title: 'Brick', subtitle: CALCULATORS.brick.subtitle, icon: Boxes, color: '#EF4444', background: '#FEF2F2' },
   { key: 'plaster', title: 'Plaster', subtitle: CALCULATORS.plaster.subtitle, icon: PaintBucket, color: '#3B82F6', background: '#EFF6FF' },
   { key: 'concrete', title: 'Concrete', subtitle: CALCULATORS.concrete.subtitle, icon: Square, color: '#475569', background: '#F8FAFC' },
@@ -42,6 +42,11 @@ const TILES: Tile[] = [
   { key: 'shuttering', title: 'Shuttering', subtitle: CALCULATORS.shuttering.subtitle, icon: Layers, color: '#F97316', background: '#FFF3E8' },
   { key: 'dam', title: 'Dam', subtitle: CALCULATORS.dam.subtitle, icon: Mountain, color: '#06B6D4', background: '#ECFEFF' },
   { key: 'stair', title: 'Stair', subtitle: CALCULATORS.stair.subtitle, icon: Hammer, color: '#22C55E', background: '#F0FDF4' },
+];
+
+const TILES: Tile[] = [
+  { key: 'quick', title: 'Calculator', subtitle: 'Quick calculations', icon: Grid3x3, color: '#F97316', background: '#FFF3E8' },
+  ...MATERIAL_TILES,
 ];
 
 export default function MaterialCalculatorScreen({ navigation }: Props) {

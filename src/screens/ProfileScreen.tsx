@@ -3,9 +3,9 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Building2, LogOut, LucideIcon, Map, MapPin, Pencil, User } from 'lucide-react-native';
+import { Building2, LogOut, LucideIcon, Map, MapPin, Pencil } from 'lucide-react-native';
 import { Avatar, pickProfilePhoto } from '../components/Avatar';
-import { Button, Card, EmptyState, formatDate, Screen } from '../components/ui';
+import { Button, Card, formatDate, Screen } from '../components/ui';
 import { RootStackParamList, TabParamList } from '../navigation/types';
 import { useAuth } from '../store/AuthStore';
 import { colors, radius } from '../theme';
@@ -59,17 +59,7 @@ export default function ProfileScreen({ navigation }: Props) {
   const [loggingOut, setLoggingOut] = useState(false);
 
   if (!user) {
-    // TODO(auth): sign-in is switched off for now, so the tab can be opened
-    // signed out. Once the sign-in gate is back this can return null again.
-    return (
-      <Screen title="Profile">
-        <EmptyState
-          icon={User}
-          title="Not signed in"
-          body="Your profile details will appear here once accounts are enabled."
-        />
-      </Screen>
-    );
+    return null;
   }
 
   const location = local.location;
