@@ -14,9 +14,15 @@ import MaterialCalculatorScreen from '../screens/MaterialCalculatorScreen';
 import CalculatorScreen from '../screens/CalculatorScreen';
 import QuickCalculatorScreen from '../screens/QuickCalculatorScreen';
 import TourDiaryScreen from '../screens/TourDiaryScreen';
-import SitePhotosScreen from '../screens/SitePhotosScreen';
+import {
+  TourDiaryEntryScreen,
+  TourDiaryMonthScreen,
+  TourDiaryReportScreen,
+} from '../screens/TourDiaryScreens';
+import SitePhotosScreen, { SitePhotoAddScreen } from '../screens/SitePhotosScreen';
 import ReportsScreen from '../screens/ReportsScreen';
-import { CommunityScreen, DesignStudioScreen } from '../screens/ComingSoonScreen';
+import { DesignStudioScreen } from '../screens/ComingSoonScreen';
+import CommunityScreen from '../screens/CommunityScreen';
 import { EstimationDetailScreen } from '../screens/EstimationScreens';
 import EstimationHomeScreen from '../screens/estimation/EstimationHomeScreen';
 import CreateWorkScreen from '../screens/estimation/CreateWorkScreen';
@@ -54,7 +60,11 @@ function HomeNavigator() {
       <HomeStack.Screen name="Calculator" component={CalculatorScreen} />
       <HomeStack.Screen name="QuickCalculator" component={QuickCalculatorScreen} />
       <HomeStack.Screen name="TourDiary" component={TourDiaryScreen} />
+      <HomeStack.Screen name="TourDiaryMonth" component={TourDiaryMonthScreen} />
+      <HomeStack.Screen name="TourDiaryReport" component={TourDiaryReportScreen} />
+      <HomeStack.Screen name="TourDiaryEntry" component={TourDiaryEntryScreen} />
       <HomeStack.Screen name="SitePhotos" component={SitePhotosScreen} />
+      <HomeStack.Screen name="SitePhotoAdd" component={SitePhotoAddScreen} />
       <HomeStack.Screen name="Reports" component={ReportsScreen} />
       <HomeStack.Screen name="Community" component={CommunityScreen} />
       <HomeStack.Screen name="DesignStudio" component={DesignStudioScreen} />
@@ -100,7 +110,8 @@ export default function RootNavigator() {
     return null;
   }
   // The app always opens on the dashboard. Sign in/up slide up over it when a
-  // signed-out user taps a feature (see requireAuth.ts).
+  // signed-out user taps a feature (see requireAuth.ts). TODO(auth): that gate
+  // is switched off for now, so these screens aren't opened anywhere.
   return (
     <NavigationContainer theme={theme}>
       <Root.Navigator screenOptions={stackOptions}>

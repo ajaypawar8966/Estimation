@@ -7,7 +7,13 @@ export type HomeStackParamList = {
   Calculator: { id: CalcId };
   QuickCalculator: undefined;
   TourDiary: undefined;
+  /** `month` is a key like "2026-10" (see utils/month.ts). */
+  TourDiaryMonth: { month: string };
+  TourDiaryReport: { month: string };
+  TourDiaryEntry: undefined;
   SitePhotos: undefined;
+  /** `uri` is a photo already taken or picked; without it the screen asks for one. */
+  SitePhotoAdd: { uri?: string } | undefined;
   Reports: undefined;
   Community: undefined;
   DesignStudio: undefined;

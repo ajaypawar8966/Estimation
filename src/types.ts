@@ -75,13 +75,21 @@ export type DiaryEntry = {
   title: string;
   site: string;
   notes: string;
+  /** e.g. Inspection, Measurement; summarised in the monthly report. */
+  workType?: string;
   createdAt: number;
 };
 
 export type SitePhoto = {
   id: string;
   uri: string;
+  /** The photo's description. */
   caption: string;
+  /** Location, e.g. "Rampur, Site Area-A". */
   site: string;
+  /** Project the photo belongs to, e.g. "CC Road Construction - Phase 2". */
+  project?: string;
+  /** Work type shown as a tag, e.g. "CC Road". */
+  workType?: string;
   createdAt: number;
 };

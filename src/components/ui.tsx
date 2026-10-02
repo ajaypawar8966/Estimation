@@ -24,50 +24,69 @@ import { colors, radius, shadow } from '../theme';
 
 export function Header({
   title,
+  subtitle,
   onBack,
   right,
   centered,
+  below,
 }: {
   title: string;
+  subtitle?: string;
   onBack?: () => void;
   right?: ReactNode;
   /** Centre the title between the back button and an equal-width spacer. */
   centered?: boolean;
+  /** Shown under the title row inside the header, e.g. a search bar. */
+  below?: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-      {onBack && (
-        <Pressable
-          onPress={onBack}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={styles.backBtn}>
-          <ChevronLeft size={20} color={colors.text} />
-        </Pressable>
-      )}
-      <Text style={[styles.headerTitle, centered && styles.headerTitleCentered]} numberOfLines={1}>
-        {title}
-      </Text>
-      {right ?? (centered && onBack ? <View style={styles.backSpacer} /> : null)}
+      <View style={styles.headerRow}>
+        {onBack && (
+          <Pressable
+            onPress={onBack}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            style={styles.backBtn}>
+            <ChevronLeft size={20} color={colors.text} />
+          </Pressable>
+        )}
+        <View style={styles.flex}>
+          <Text style={[styles.headerTitle, centered && styles.headerTitleCentered]} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text style={[styles.headerSub, centered && styles.centerText]} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+        {right ?? (centered && onBack ? <View style={styles.backSpacer} /> : null)}
+      </View>
+      {below}
     </View>
   );
 }
 
 export function Screen({
   title,
+  subtitle,
   onBack,
   right,
   centered,
+  headerBelow,
   children,
   scroll = true,
   footer,
 }: {
   title: string;
+  subtitle?: string;
   onBack?: () => void;
   right?: ReactNode;
   centered?: boolean;
+  headerBelow?: ReactNode;
   children: ReactNode;
   scroll?: boolean;
   /** Pinned below the scrolling content, e.g. a Save button. */
@@ -76,7 +95,14 @@ export function Screen({
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
-      <Header title={title} onBack={onBack} right={right} centered={centered} />
+      <Header
+        title={title}
+        subtitle={subtitle}
+        onBack={onBack}
+        right={right}
+        centered={centered}
+        below={headerBelow}
+      />
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.content}
@@ -547,15 +573,16 @@ const styles = StyleSheet.create({
   inputWrapMultiline: { alignItems: 'flex-start' },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    gap: 14,
     paddingHorizontal: 20,
     paddingBottom: 14,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
   },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  centerText: { textAlign: 'center' },
   backBtn: {
     width: 36,
     height: 36,
@@ -564,7 +591,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: { flex: 1, fontSize: 24, fontWeight: '800', color: colors.text },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: colors.text },
   headerTitleCentered: { fontSize: 20, textAlign: 'center' },
   backSpacer: { width: 36 },
   footer: {
