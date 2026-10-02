@@ -1,105 +1,268 @@
-import React, { useMemo } from 'react';
-import { Share, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ChartColumn, Share2 } from 'lucide-react-native';
-import { Button, Card, EmptyState, Screen, SectionTitle } from '../components/ui';
+import {
+  Calendar,
+  ChevronRight,
+  Filter,
+  FolderOpen,
+  LucideIcon,
+  Search,
+  Tag,
+} from 'lucide-react-native';
+import {
+  Card,
+  EmptyState,
+  formatDate,
+  IconTile,
+  Screen,
+  SelectField,
+} from '../components/ui';
 import { CALCULATORS, formatNumber } from '../calculators';
 import { HomeStackParamList } from '../navigation/types';
 import { useStore } from '../store/AppStore';
-import { colors } from '../theme';
+import { colors, radius } from '../theme';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Reports'>;
 
-/** Material totals worth summing across estimates, in display order. */
-const TOTALS: { key: string; label: string; unit: string; decimals: number }[] = [
-  { key: 'cement_bags', label: 'Cement', unit: 'bags', decimals: 0 },
-  { key: 'sand_m3', label: 'Sand', unit: 'm³', decimals: 2 },
-  { key: 'aggregate_m3', label: 'Aggregate', unit: 'm³', decimals: 2 },
-  { key: 'bricks', label: 'Bricks', unit: 'nos', decimals: 0 },
-  { key: 'steel_kg', label: 'Steel', unit: 'kg', decimals: 0 },
-  { key: 'tiles', label: 'Tiles', unit: 'nos', decimals: 0 },
-  { key: 'paint_l', label: 'Paint', unit: 'L', decimals: 1 },
-  { key: 'shutter_m2', label: 'Shuttering', unit: 'm²', decimals: 1 },
-];
+type SortBy = 'date' | 'name';
+
+const ALL = 'All Categories';
+
+function SortButton({
+  icon: Icon,
+  label,
+  active,
+  onPress,
+}: {
+  icon: LucideIcon;
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const fg = active ? '#fff' : colors.text;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      style={[styles.sortBtn, active && styles.sortBtnActive]}
+    >
+      <Icon size={14} color={fg} />
+      <Text style={[styles.sortText, { color: fg }]}>{label}</Text>
+    </Pressable>
+  );
+}
 
 export default function ReportsScreen({ navigation }: Props) {
   const { estimates } = useStore();
+  const [query, setQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [category, setCategory] = useState(ALL);
+  const [sortBy, setSortBy] = useState<SortBy>('date');
 
-  const { totals, byType } = useMemo(() => {
-    const sums: Record<string, number> = {};
-    const counts: Record<string, number> = {};
-    for (const e of estimates) {
-      counts[e.calcId] = (counts[e.calcId] ?? 0) + 1;
-      for (const r of e.results) {
-        sums[r.key] = (sums[r.key] ?? 0) + r.value;
-      }
-    }
-    return {
-      totals: TOTALS.filter(t => (sums[t.key] ?? 0) > 0).map(t => ({ ...t, value: sums[t.key] })),
-      byType: Object.entries(counts),
-    };
-  }, [estimates]);
+  // Only offer categories that have at least one saved estimate.
+  const categories = useMemo(
+    () => [ALL, ...new Set(estimates.map(e => CALCULATORS[e.calcId].title))],
+    [estimates],
+  );
 
-  const shareReport = () =>
-    Share.share({
-      message: [
-        'Material summary',
-        `${estimates.length} saved estimate(s)`,
-        '',
-        ...totals.map(t => `• ${t.label}: ${formatNumber(t.value, t.decimals)} ${t.unit}`),
-      ].join('\n'),
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return estimates
+      .filter(e => category === ALL || CALCULATORS[e.calcId].title === category)
+      .filter(
+        e =>
+          !q ||
+          e.name.toLowerCase().includes(q) ||
+          CALCULATORS[e.calcId].title.toLowerCase().includes(q),
+      )
+      .sort((a, b) =>
+        sortBy === 'name'
+          ? a.name.localeCompare(b.name)
+          : b.createdAt - a.createdAt,
+      );
+  }, [estimates, query, category, sortBy]);
+
+  const filtered = category !== ALL || sortBy !== 'date';
+  // Saved estimates live in the Estimation tab's stack.
+  const openEstimate = (id: string) =>
+    navigation.getParent()?.navigate('Estimation', {
+      screen: 'EstimationDetail',
+      params: { id },
+      initial: false,
     });
 
   return (
-    <Screen title="Reports" onBack={navigation.goBack}>
-      {estimates.length === 0 ? (
+    <Screen
+      title="Reports"
+      centered
+      onBack={navigation.goBack}
+      right={
+        <Pressable
+          onPress={() => setShowFilters(v => !v)}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Filters"
+          accessibilityState={{ expanded: showFilters }}
+          style={styles.headerIcon}
+        >
+          <Filter
+            size={20}
+            color={showFilters || filtered ? colors.primary : colors.text}
+          />
+        </Pressable>
+      }
+      headerBelow={
+        <>
+          <View style={styles.search}>
+            <Search size={18} color={colors.textFaint} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search villages or reports..."
+              placeholderTextColor={colors.textFaint}
+              style={styles.searchInput}
+              returnKeyType="search"
+            />
+          </View>
+          {showFilters && (
+            <View style={styles.filters}>
+              <SelectField
+                label="Category"
+                placeholder={ALL}
+                options={categories}
+                value={category}
+                onChange={setCategory}
+              />
+              <Text style={styles.filterLabel}>Sort By</Text>
+              <View style={styles.sortRow}>
+                <SortButton
+                  icon={Calendar}
+                  label="Date"
+                  active={sortBy === 'date'}
+                  onPress={() => setSortBy('date')}
+                />
+                <SortButton
+                  icon={Tag}
+                  label="Name"
+                  active={sortBy === 'name'}
+                  onPress={() => setSortBy('name')}
+                />
+              </View>
+            </View>
+          )}
+        </>
+      }
+    >
+      {shown.length === 0 ? (
         <EmptyState
-          icon={ChartColumn}
-          title="Nothing to report yet"
-          body="Save estimates from the Material Calculator and their combined totals appear here."
+          icon={FolderOpen}
+          title={estimates.length ? 'No Matching Reports' : 'No Reports Yet'}
+          body={
+            estimates.length
+              ? 'Try a different search or category.'
+              : 'Save an estimate from the Material Calculator to see it here.'
+          }
         />
       ) : (
-        <>
-          <Card style={styles.hero}>
-            <Text style={styles.heroValue}>{estimates.length}</Text>
-            <Text style={styles.heroLabel}>saved estimates</Text>
-          </Card>
-
-          <SectionTitle title="Total materials" subtitle="Summed across all saved estimates" />
-          <Card>
-            {totals.map((t, i) => (
-              <View key={t.key} style={[styles.row, i > 0 && styles.rowBorder]}>
-                <Text style={styles.label}>{t.label}</Text>
-                <Text style={styles.value}>
-                  {formatNumber(t.value, t.decimals)} {t.unit}
-                </Text>
-              </View>
-            ))}
-          </Card>
-
-          <SectionTitle title="Estimates by type" />
-          <Card>
-            {byType.map(([id, count], i) => (
-              <View key={id} style={[styles.row, i > 0 && styles.rowBorder]}>
-                <Text style={styles.label}>{CALCULATORS[id as keyof typeof CALCULATORS].title}</Text>
-                <Text style={styles.value}>{count}</Text>
-              </View>
-            ))}
-          </Card>
-
-          <Button label="Share report" icon={Share2} onPress={shareReport} />
-        </>
+        shown.map(e => {
+          const def = CALCULATORS[e.calcId];
+          const main = e.results.find(r => r.primary) ?? e.results[0];
+          return (
+            <Pressable
+              key={e.id}
+              onPress={() => openEstimate(e.id)}
+              accessibilityRole="button"
+              style={({ pressed }) => pressed && styles.pressed}
+            >
+              <Card style={styles.row}>
+                <IconTile
+                  icon={FolderOpen}
+                  color={colors.primary}
+                  background={colors.primarySoft}
+                  size={44}
+                  iconSize={20}
+                />
+                <View style={styles.flex}>
+                  <Text style={styles.name} numberOfLines={1}>
+                    {e.name}
+                  </Text>
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {def.title} · {formatDate(e.createdAt)}
+                  </Text>
+                  {main ? (
+                    <Text style={styles.result} numberOfLines={1}>
+                      {main.label}: {formatNumber(main.value, main.decimals)}{' '}
+                      {main.unit ?? ''}
+                    </Text>
+                  ) : null}
+                </View>
+                <ChevronRight size={18} color={colors.textMuted} />
+              </Card>
+            </Pressable>
+          );
+        })
       )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: 'center', paddingVertical: 22 },
-  heroValue: { fontSize: 40, fontWeight: '800', color: colors.primary },
-  heroLabel: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
-  rowBorder: { borderTopWidth: 1, borderTopColor: colors.divider },
-  label: { fontSize: 14, color: colors.textMuted },
-  value: { fontSize: 14, fontWeight: '700', color: colors.text },
+  flex: { flex: 1 },
+  pressed: { opacity: 0.85 },
+  headerIcon: { width: 36, alignItems: 'center' },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    height: 46,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#F8FAFC',
+  },
+  searchInput: { flex: 1, fontSize: 14, color: colors.text, padding: 0 },
+  filters: {
+    padding: 14,
+    paddingBottom: 16,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    backgroundColor: '#FFF7ED',
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 6,
+  },
+  sortRow: { flexDirection: 'row', gap: 10 },
+  sortBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  sortBtnActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  sortText: { fontSize: 13, fontWeight: '700' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14 },
+  name: { fontSize: 15, fontWeight: '800', color: colors.text },
+  meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  result: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primaryDark,
+    marginTop: 4,
+  },
 });
